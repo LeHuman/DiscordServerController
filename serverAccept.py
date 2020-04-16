@@ -5,9 +5,8 @@ from enum import Enum
 from threading import Thread
 
 openSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# HOST = "192.168.1.217"
+HOST = "192.168.1.217"
 # HOST = "127.0.0.1"
-HOST = ''
 PORT = 4578
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
@@ -16,19 +15,20 @@ print("PORT: ", PORT)
 print("TARGET SERVER: ", TARGET_SERVER)
 openSocket.bind((HOST, PORT))
 
-statusString = {
-    10: "ON",
-    5: "TURNING ON",
-    2: "TURNING OFF",
-    0: "OFF",
-}
-
 
 class Status(Enum):
     ON = 10
     TURNING_ON = 5
     TURNING_OFF = 2
     OFF = 0
+
+
+statusString = {
+    Status.ON: "ON",
+    Status.TURNING_ON: "TURNING ON",
+    Status.TURNING_OFF: "TURNING OFF",
+    Status.OFF: "OFF",
+}
 
 
 SERVERSTATUS = Status.OFF
@@ -54,7 +54,7 @@ def order(cmd):
 
     print("Recieved command:", cmd)
 
-    if cmd == Command.check:
+    if cmd == Command.check.value:
         return statusString[SERVERSTATUS]
 
     if SERVERSTATUS == Status.ON:
@@ -83,7 +83,7 @@ class client(Thread):
         Thread.__init__(self)
         self.sock = socket
         self.addr = address
-        print("New Client:", socket.getpeername())
+        print("New Client:", address)
         self.start()
 
     def msg(self, message):
@@ -91,16 +91,16 @@ class client(Thread):
         self.sock.send(bytes(message, "utf-8"))
 
     def end(self):
-        self.sock.send(b"Goodbye")
+        self.sock.send(b"\nGoodbye")
         self.sock.close()
-        
 
     def run(self):
-        recieve = self.sock.recv(4096).decode()
+        recieve = self.sock.recv(256).decode()
         try:
             recieve = int(recieve)
         except:
             self.msg("Bad Command")
+            print("command:", recieve)
             self.end()
             return
 
@@ -111,10 +111,11 @@ class client(Thread):
 def socketLoop():
     openSocket.listen(2)
     print("Command server started")
-    while not(SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
+    while not (SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
         clientsocket, address = openSocket.accept()
         client(clientsocket, address)
         # time.sleep(1)
+
 
 while 1:
     socketLoop()
