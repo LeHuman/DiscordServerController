@@ -2,6 +2,7 @@
 
 import json
 import socket
+import ssl
 import urllib.request
 from enum import Enum
 import time
@@ -22,7 +23,11 @@ class Command(Enum):
 def getAltStatus():
     with urllib.request.urlopen(API_URL) as url:
         data = json.loads(url.read().decode())
-        print(data["hostname"] + " is Online:" + data["online"])
+        print(data["hostname"], "is online" if data["online"] else "is offline")
+        if data["motd"]:
+            print(data["motd"]["clean"])
+        if data["players"]:
+            print("Players online:", data["players"]["online"])
 
 
 def query(cmd):
@@ -37,3 +42,6 @@ def query(cmd):
     except:
         print("Error connecting to command server!")
         return 0
+
+
+getAltStatus()
