@@ -1,4 +1,5 @@
 import socket
+import ssl
 import time
 from datetime import datetime
 from enum import Enum
@@ -6,7 +7,6 @@ from threading import Thread
 
 openSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST = "192.168.1.217"
-# HOST = "127.0.0.1"
 PORT = 4578
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
@@ -87,11 +87,10 @@ class client(Thread):
         self.start()
 
     def msg(self, message):
+        self.sock.send(message.encode())
         print(message)
-        self.sock.send(bytes(message, "utf-8"))
 
     def end(self):
-        self.sock.send(b"\nGoodbye")
         self.sock.close()
 
     def run(self):
@@ -119,4 +118,4 @@ def socketLoop():
 
 while 1:
     socketLoop()
-    # TODO: how are we turning on the server?
+    # TODO: how are we actually turning the server on?
