@@ -6,7 +6,8 @@ from threading import Thread
 
 openSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # HOST = "192.168.1.217"
-HOST = "99.127.217.73"
+# HOST = "127.0.0.1"
+HOST = ''
 PORT = 4578
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
@@ -113,7 +114,7 @@ def socketLoop():
     while not(SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
         clientsocket, address = openSocket.accept()
         client(clientsocket, address)
-        time.sleep(1)
+        # time.sleep(1)
 
 while 1:
     socketLoop()
