@@ -5,7 +5,7 @@ import socket
 import urllib.request
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# HOST = "192.168.1.217"
+# HOST = "koolkidz.club"
 HOST = "99.127.217.73"
 PORT = 4578
 TARGET_SERVER = "mc.koolkidz.club"
@@ -17,9 +17,9 @@ s.connect((HOST, PORT))
 #     print(data["online"])
 #     print(data["hostname"])
 
-s.send("15".encode())
+s.send("8".encode())
 data = ""
-data = s.recv(4096).decode()
+data = s.recv(256).decode()
 print(data)
 
 s.close()
