@@ -34,14 +34,31 @@ def query(cmd):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(5)
-            s.connect((HOST, PORT))
-            s.send(cmd.value)
-            print(s.recv(256).decode())
-            s.close()
+            ws = ssl.wrap_socket(
+                s, ssl_version=ssl.PROTOCOL_TLSv1, ciphers="ADH-AES256-SHA"
+            )
+            ws.connect((HOST, PORT))
+            ws.send(cmd.value)
+            print(ws.recv(256).decode())
+            ws.close()
             return 1
     except:
         print("Error connecting to command server!")
         return 0
 
 
-getAltStatus()
+def handle(conn):
+    conn.write(b"GET / HTTP/1.1\n")
+    print(conn.recv().decode())
+
+
+sock = socket.socket(socket.AF_INET)
+sock.settimeout(10)
+context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # optional
+conn = context.wrap_socket(sock, server_hostname=HOST)
+try:
+    conn.connect((HOST, PORT))
+    handle(conn)
+finally:
+    conn.close()

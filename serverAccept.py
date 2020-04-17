@@ -5,15 +5,25 @@ from datetime import datetime
 from enum import Enum
 from threading import Thread
 
-openSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST = "192.168.1.217"
 PORT = 4578
+CERT = "cert.pem"
+KEY = "key.pem"
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
 print("HOST: ", HOST)
 print("PORT: ", PORT)
 print("TARGET SERVER: ", TARGET_SERVER)
-openSocket.bind((HOST, PORT))
+
+
+# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket()
+sock.bind((HOST, PORT))
+sock.listen(5)
+context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+context.load_cert_chain(keyfile=KEY, certfile=CERT)  # 1. key, 2. cert, 3. intermediates
+context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # optional
+context.set_ciphers("EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH")
 
 
 class Status(Enum):
@@ -107,15 +117,31 @@ class client(Thread):
         self.end()
 
 
-def socketLoop():
-    openSocket.listen(2)
-    print("Command server started")
-    while not (SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
-        clientsocket, address = openSocket.accept()
-        client(clientsocket, address)
-        # time.sleep(1)
+def handle(conn):
+    print(conn.recv(256).decode())
+    conn.write(b"HTTP/1.1 200 OK\n\n%s" % conn.getpeername()[0].encode())
 
 
-while 1:
-    socketLoop()
-    # TODO: how are we actually turning the server on?
+# def socketLoop():
+#     wrappedSocket.listen(2)
+#     print("Command server started")
+#     while not (SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
+#         clientsocket, address = wrappedSocket.accept()
+#         client(clientsocket, address)
+
+
+while not (SERVERSTATUS == Status.TURNING_OFF or SERVERSTATUS == Status.TURNING_ON):
+    conn = None
+    ssock, addr = sock.accept()
+    try:
+        conn = context.wrap_socket(ssock, server_side=True)
+        handle(conn)
+    except ssl.SSLError as e:
+        print(e)
+    finally:
+        if conn:
+            conn.close()
+
+# while 1:
+#     socketLoop()
+#     # TODO: how are we actually turning the server on?
