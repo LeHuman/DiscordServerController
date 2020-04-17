@@ -52,13 +52,19 @@ def handle(conn):
     print(conn.recv().decode())
 
 
-sock = socket.socket(socket.AF_INET)
-sock.settimeout(10)
-context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # optional
-conn = context.wrap_socket(sock, server_hostname=HOST)
-try:
-    conn.connect((HOST, PORT))
-    handle(conn)
-finally:
-    conn.close()
+# sock = socket.socket(socket.AF_INET)
+# sock.settimeout(10)
+# context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+# context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # optional
+# conn = context.wrap_socket(sock, server_hostname=HOST)
+# try:
+#     conn.connect((HOST, PORT))
+#     handle(conn)
+# finally:
+#     conn.close()
+
+context = ssl.create_default_context()
+conn = context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=HOST)
+conn.connect((HOST, PORT))
+cert = conn.getpeercert()
+print(cert)
