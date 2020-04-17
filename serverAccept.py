@@ -152,9 +152,9 @@ def deal_with_client(connstream):
     # empty data means the client is finished with us
     while data:
         # if not do_something(connstream, data):
-            # we'll assume do_something returns False
-            # when we're finished with client
-            # break
+        # we'll assume do_something returns False
+        # when we're finished with client
+        # break
         data = connstream.recv(1024)
     # finished with client
 

@@ -7,8 +7,8 @@ import urllib.request
 from enum import Enum
 import time
 
-# HOST = "koolkidz.club"
 HOST = "99.127.217.73"
+# HOST = "www.koolkidz.club"
 PORT = 4578
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
