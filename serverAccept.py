@@ -160,17 +160,21 @@ def deal_with_client(connstream):
 
 
 context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+# context = ssl.create_default_context(ssl.PROTOCOL_TLSv1)
 context.load_cert_chain(certfile=CERT, keyfile=KEY)
 
 bindsocket = socket.socket()
 bindsocket.bind((HOST, PORT))
 bindsocket.listen(5)
-
+print("Begin!")
 while True:
-    newsocket, fromaddr = bindsocket.accept()
-    connstream = context.wrap_socket(newsocket, server_side=True)
     try:
-        deal_with_client(connstream)
-    finally:
+        newsocket, fromaddr = bindsocket.accept()
+        connstream = context.wrap_socket(newsocket, server_side=True)
+        request = connstream.read()
+        print(request)
+        # deal_with_client(connstream)
         connstream.shutdown(socket.SHUT_RDWR)
         connstream.close()
+    except ssl.SSLError as e:
+        print(e)

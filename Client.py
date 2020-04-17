@@ -10,6 +10,8 @@ import time
 HOST = "99.127.217.73"
 # HOST = "www.koolkidz.club"
 PORT = 4578
+# HOST = "www.python.org"
+# PORT = 443
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
 
@@ -63,7 +65,7 @@ def handle(conn):
 # finally:
 #     conn.close()
 
-context = ssl.create_default_context()
+context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
 conn = context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=HOST)
 conn.connect((HOST, PORT))
 cert = conn.getpeercert()
