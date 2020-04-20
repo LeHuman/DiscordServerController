@@ -1,0 +1,10 @@
+{
+    "192.168.1.254": {
+        "level": 2,
+        "spam": 1,
+        "state": {
+            "IPstate": "IPstate.banMed"
+        },
+        "time": 1587357142
+    }
+}

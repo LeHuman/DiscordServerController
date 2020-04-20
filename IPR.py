@@ -10,6 +10,7 @@ UPDATETIME = 10  # period to update IP JSON
 SPAMLENGTH = 2  # length in sec between what would be considered spam
 SPAMMAX = 5  # number of times before spam is detected
 SPAMRESET = 10  # time to reset spam counter
+UPDATE = False
 IPRecord = {}
 
 
@@ -36,8 +37,12 @@ class JSONThread(Thread):
         self.start()
 
     def run(self):
+        global UPDATE
         while True:
-            updateIPFile()
+            if UPDATE:
+                updateIPFile()
+                print("IP record updated")
+                UPDATE = False
             time.sleep(UPDATETIME)
 
 
@@ -96,7 +101,6 @@ def init():
     except json.decoder.JSONDecodeError:
         print("Error decoding file")
     USEFILE = False
-    JSONThread()
 
 
 def __setIP(address, state=IPstate.accept):
@@ -145,6 +149,8 @@ def __updateIP(address):  # called whenever a new or returning ip connects
 
 # IMPROVE: add ip to hosts or somthin? and then periodicly check who gets unbanned instead of waiting for them to reconnect
 def checkIP(address):
+    global UPDATE
+    UPDATE = True
     if address in IPRecord:
         level = IPlevel[IPRecord[address]["level"]]
         if IPRecord[address]["state"] == IPstate.banIndefinite:
@@ -165,3 +171,4 @@ def checkIP(address):
 
 
 init()
+JSONThread()
