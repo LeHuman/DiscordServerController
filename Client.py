@@ -6,14 +6,13 @@ import ssl
 import urllib.request
 from enum import Enum
 import time
+from threading import Thread
 
-HOST = "99.127.217.73"
-# HOST = "www.koolkidz.club"
+HOST = "www.koolkidz.club"
 PORT = 4578
-# HOST = "www.python.org"
-# PORT = 443
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
+context = ssl.SSLContext(ssl.PROTOCOL_TLS)
 
 
 class Command(Enum):
@@ -34,39 +33,36 @@ def getAltStatus():
 
 def query(cmd):
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)
-            ws = ssl.wrap_socket(
-                s, ssl_version=ssl.PROTOCOL_TLSv1, ciphers="ADH-AES256-SHA"
-            )
-            ws.connect((HOST, PORT))
-            ws.send(cmd.value)
-            print(ws.recv(256).decode())
-            ws.close()
-            return 1
-    except:
-        print("Error connecting to command server!")
-        return 0
+        with socket.create_connection((HOST, PORT)) as sock:
+            with context.wrap_socket(sock, server_hostname=HOST) as ssock:
+                ssock.settimeout(2)
+                ssock.send(cmd.value)
+                print(ssock.recv(256).decode())
+                ssock.close()
+                return 1
+    except ssl.SSLError as e:
+        print(e)
+    except ConnectionResetError as e:
+        print(e)
 
+class spam2(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.start()
+    def run(self):
+        spam()
+        for _ in range(20):
+            query(Command.triggerOff)
+            query(Command.triggerOn)
 
-def handle(conn):
-    conn.write(b"GET / HTTP/1.1\n")
-    print(conn.recv().decode())
+class spam(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.start()
+    def run(self):
+        spam2()
+        for _ in range(20):
+            query(Command.triggerOff)
+            query(Command.triggerOn)
 
-
-# sock = socket.socket(socket.AF_INET)
-# sock.settimeout(10)
-# context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-# context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # optional
-# conn = context.wrap_socket(sock, server_hostname=HOST)
-# try:
-#     conn.connect((HOST, PORT))
-#     handle(conn)
-# finally:
-#     conn.close()
-
-context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-conn = context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=HOST)
-conn.connect((HOST, PORT))
-cert = conn.getpeercert()
-print(cert)
+spam()
