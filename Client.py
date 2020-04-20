@@ -66,4 +66,4 @@ class spam(Thread):
             query(Command.triggerOn)
 
 spam()
-query(Command.triggerOff)
+# query(Command.triggerOff)

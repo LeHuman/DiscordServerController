@@ -1,20 +1,33 @@
-import socket
-import ssl
-import time
-import IPR
-from datetime import datetime
-from enum import Enum
-from threading import Thread
-
+VERSION = "1.0.0"
 HOST = "192.168.1.217"
 PORT = 4578
 CERT = "cert.pem"
 KEY = "priv.key"
+RESTARTS = 5
 TARGET_SERVER = "mc.koolkidz.club"
 API_URL = "https://api.mcsrvstat.us/2/" + TARGET_SERVER
+print("\n----------------------------------------------")
+print("Command SSL Socket Server", VERSION)
+print("----------------------------------------------")
 print("HOST: ", HOST)
 print("PORT: ", PORT)
 print("TARGET SERVER: ", TARGET_SERVER)
+print("----------------------------------------------\n")
+
+import logging
+import logging.handlers
+import logging.config
+import socket
+import ssl
+import time
+from datetime import datetime
+from enum import Enum
+from threading import Thread
+
+import IPR
+
+logging.config.fileConfig(fname="log_config.conf", disable_existing_loggers=False)
+log = logging.getLogger("root")
 
 
 class Status(Enum):
@@ -53,7 +66,7 @@ def SERVEROFF():
 
 def order(cmd):
 
-    print("Recieved command:", cmd)
+    log.debug("Recieved command: " + str(cmd))
 
     if cmd == Command.check.value:
         # return statusString[SERVERSTATUS]
@@ -85,14 +98,18 @@ class client(Thread):
         Thread.__init__(self)
         self.sock = socket
         self.addr = address
+        self.straddr = str(self.addr[0]) + ":" + str(self.addr[1]) + " : "
+        log.debug("New client thread: " + str(self.addr[0]) + ":" + str(self.addr[1]))
         self.start()
 
     def msg(self, message):
         self.sock.send(message.encode())
-        print(message)
+        log.debug(self.straddr + str(message))
 
     def end(self):
+        log.debug(self.straddr + "Closing socket and thread")
         self.sock.close()
+        self._running = False
 
     def run(self):
         recieve = self.sock.recv(256).decode()
@@ -100,7 +117,7 @@ class client(Thread):
             recieve = int(recieve)
         except:
             self.msg("Bad Command")
-            print("command:", recieve)
+            log.warning(self.straddr + "Bad command recieved: " + recieve)
             self.end()
             return
 
@@ -112,8 +129,8 @@ context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain("cert.pem", "priv.key")
 
 
-def socketLoop():
-    print("Command server started")
+def socketListen():
+    log.info("Command server started")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
         sock.bind((HOST, PORT))
         sock.listen(5)
@@ -126,10 +143,26 @@ def socketLoop():
                     if IPR.checkIP(address[0]):
                         client(clientsocket, address)
                     else:
-                        print("Blocked: ", address[0])
+                        log.warning("Blocked: " + address[0])
                 except OSError as e:
                     print(e)
 
 
-socketLoop()
+def newThread(trgt):
+    thread = Thread(target=trgt)
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
+while True:
+    time.sleep(60)
+    socketThread = newThread(socketListen)
+    if not socketThread.is_alive():
+        if RESTARTS == 0:
+            log.critical("Max restarts has been hit, server must be manually restared")
+            break
+        RESTARTS -= 1
+        log.error("Server seems to have crashed... Attempting restart")
+
 # TODO: how are we actually turning the server on?
